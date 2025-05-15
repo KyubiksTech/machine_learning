@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+
+    .circle-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .circle {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+
+    .circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .thought-bubble {
+      position: absolute;
+      left: 170px;
+      top: 20px;
+      width: 140px;
+      height: 60px;
+      background-color: #fff;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      color: #333;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+      border: 2px solid #000;
+      text-align: center;
+    }
+
+    .thought-bubble.visible {
+      opacity: 1;
+    }
+
+    .thought-bubble::after {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 10px solid #fff;
+    }
+
+    .input-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      width: 200px;
+    }
+
+    button[type="submit"] {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    #response {
+      font-size: 16px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="circle-container">
+    <div class="circle">
+      <img id="gif" src="face/neutral.gif" alt="Face image">
+    </div>
+    <div id="thought" class="thought-bubble"></div>
+  </div>
+
+  <div class="input-container">
+    <form id="chatForm">
+      <input type="text" id="userInput" name="userInput" placeholder="Type here to chat" value="">
+      <button type="submit">Send</button>
+      <div id="response"></div>
+    </form>
+  </div>
+
+  <script>
+    const input = document.getElementById("userInput");
+    const gif = document.getElementById("gif");
+    const thought = document.getElementById("thought");
+    const circle = document.querySelector(".circle");
+    const form = document.getElementById("chatForm");
+
+    const randomOptions = [
+      { face: "face/wink.gif", message: "why are you not talking to me" },
+      { face: "face/party.gif", message: "let's talk" },
+      { face: "face/blush.gif", message: "don't worry you can talk to me" }
+    ];
+
+    let inactivityTimer;
+
+    function startInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        const randomOption = randomOptions[Math.floor(Math.random() * randomOptions.length)];
+        gif.src = randomOption.face;
+        thought.textContent = randomOption.message;
+        thought.classList.add("visible");
+        setTimeout(() => {
+          gif.src = "face/neutral.gif";
+          thought.textContent = "";
+          thought.classList.remove("visible");
+          startInactivityTimer();
+        }, 1700);
+      }, 5000);
+    }
+
+    circle.addEventListener("click", () => {
+      gif.src = "face/cursing.gif";
+      clearTimeout(inactivityTimer);
+      setTimeout(() => {
+        gif.src = "face/neutral.gif";
+        startInactivityTimer();
+      }, 2400);
+    });
+
+    startInactivityTimer();
+
+    input.addEventListener("input", startInactivityTimer);
+    input.addEventListener("keypress", (e) => {
+      startInactivityTimer();
+      if (e.key === "Enter") {
+        e.preventDefault();
+        form.dispatchEvent(new Event("submit"));
+      }
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const userInput = input.value.trim().toLowerCase();
+      let gifSrc = "face/neutral.gif";
+      let thoughtText = "";
+      let isVisible = false;
+      let timeout = 0;
+
+      if (window.location.search.includes("revert=1")) {
+        window.history.replaceState({}, document.title, "index.html");
+      }
+
+      if (userInput === "hello") {
+        gifSrc = "face/smile.gif";
+        thoughtText = "hi";
+        isVisible = true;
+        timeout = 1700;
+      } else if (userInput === "whoareyou") {
+        gifSrc = "face/blush.gif";
+        thoughtText = "i am a chat bot";
+        isVisible = true;
+        timeout = 1600;
+      } else if (userInput === "kyubiks") {
+        gifSrc = "face/wink.gif";
+        thoughtText = "Kyubiks Music is a sindhulian record label";
+        isVisible = true;
+        timeout = 3600;
+      } else if (userInput !== "") {
+        gifSrc = "face/thinking.gif";
+        thoughtText = "I didn't understand";
+        isVisible = true;
+        timeout = 1600;
+      }
+
+      gif.src = gifSrc;
+      thought.textContent = thoughtText;
+      thought.classList.toggle("visible", isVisible);
+      input.value = "";
+      startInactivityTimer();
+
+      if (timeout > 0) {
+        setTimeout(() => {
+          gif.src = "face/neutral.gif";
+          thought.textContent = "";
+          thought.classList.remove("visible");
+          window.location.href = "index.html";
+        }, timeout);
+      }
+    });
+
+    if (window.location.search.includes("revert=1")) {
+      gif.src = "face/neutral.gif";
+      thought.textContent = "";
+      thought.classList.remove("visible");
+      window.history.replaceState({}, document.title, "index.html");
+    }
+  </script>
+</body>
+</html>
